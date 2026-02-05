@@ -7,6 +7,7 @@ export default function Layout({ children }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [scrolled, setScrolled] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -25,13 +26,20 @@ export default function Layout({ children }) {
     }
   }, []);
 
-  const handleLogout = () => {
-    authAPI.logout();
-    router.push('/login');
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await authAPI.logout();
+      // Small delay for better UX
+      await new Promise(resolve => setTimeout(resolve, 500));
+      router.push('/');
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   const menuItems = [
-    { href: '/', label: 'Dashboard', icon: '📊' },
+    { href: '/dashboard', label: 'Dashboard', icon: '📊' },
     { href: '/transactions', label: 'Transaksi', icon: '💰' },
     { href: '/budgets', label: 'Anggaran', icon: '📋' },
     { href: '/savings', label: 'Tabungan', icon: '🎯' },
@@ -49,11 +57,11 @@ export default function Layout({ children }) {
       {/* Glassmorphism Header */}
       <nav
         className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled
-            ? 'bg-white/80 backdrop-blur-md shadow-sm border-b border-white/20'
-            : 'bg-transparent'
+          ? 'bg-white/80 backdrop-blur-md shadow-sm border-b border-white/20'
+          : 'bg-transparent'
           }`}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <div className="flex-shrink-0 flex items-center cursor-pointer" onClick={() => router.push('/')}>
@@ -72,8 +80,8 @@ export default function Layout({ children }) {
                   key={item.href}
                   href={item.href}
                   className={`px-3 py-2 rounded-full text-sm font-medium transition-all duration-200 flex items-center space-x-1.5 ${isActive(item.href)
-                      ? 'bg-blue-50 text-blue-600 shadow-sm ring-1 ring-blue-100'
-                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                    ? 'bg-blue-50 text-blue-600 shadow-sm ring-1 ring-blue-100'
+                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                     }`}
                 >
                   <span>{item.icon}</span>
@@ -99,12 +107,20 @@ export default function Layout({ children }) {
                   </div>
                   <button
                     onClick={handleLogout}
-                    className="ml-2 p-2 text-slate-400 hover:text-red-500 transition-colors"
+                    disabled={isLoggingOut}
+                    className="ml-2 p-2 text-slate-400 hover:text-red-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     title="Keluar"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
-                    </svg>
+                    {isLoggingOut ? (
+                      <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+                      </svg>
+                    )}
                   </button>
                 </div>
               ) : (
@@ -136,8 +152,8 @@ export default function Layout({ children }) {
                   key={item.href}
                   href={item.href}
                   className={`flex items-center px-4 py-3 rounded-xl text-base font-medium transition-colors ${isActive(item.href)
-                      ? 'bg-blue-50 text-blue-600'
-                      : 'text-slate-600 hover:bg-slate-50'
+                    ? 'bg-blue-50 text-blue-600'
+                    : 'text-slate-600 hover:bg-slate-50'
                     }`}
                   onClick={() => setIsMenuOpen(false)}
                 >
@@ -161,12 +177,20 @@ export default function Layout({ children }) {
                       handleLogout();
                       setIsMenuOpen(false);
                     }}
-                    className="w-full flex items-center px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl font-medium transition-colors"
+                    disabled={isLoggingOut}
+                    className="w-full flex items-center px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mr-3">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
-                    </svg>
-                    Logout
+                    {isLoggingOut ? (
+                      <svg className="animate-spin h-5 w-5 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mr-3">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+                      </svg>
+                    )}
+                    {isLoggingOut ? 'Logging out...' : 'Logout'}
                   </button>
                 </div>
               )}
@@ -179,7 +203,7 @@ export default function Layout({ children }) {
       <div className="h-16"></div>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 animate-fade-in-up">
+      <main className="mx-auto py-8 px-4 sm:px-6 lg:px-8 animate-fade-in-up">
         {children}
       </main>
     </div>

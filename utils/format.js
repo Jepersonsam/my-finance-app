@@ -39,7 +39,20 @@ export function formatDate(date) {
  */
 export function formatDateShort(date) {
   if (!date) return '-';
-  const d = new Date(date);
+
+  // Handle UTC dates without timezone conversion
+  let d;
+  if (typeof date === 'string') {
+    // Parse as UTC to prevent timezone shift
+    // Extract YYYY-MM-DD part
+    const datePart = date.includes('T') ? date.substring(0, 10) : date;
+    const [year, month, day] = datePart.split('-').map(Number);
+    // Create date in local timezone using the UTC values
+    d = new Date(year, month - 1, day);
+  } else {
+    d = new Date(date);
+  }
+
   if (isNaN(d.getTime())) return '-';
 
   return new Intl.DateTimeFormat('id-ID', {

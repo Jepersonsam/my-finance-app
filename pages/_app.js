@@ -2,6 +2,7 @@ import '@/styles/globals.css';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Layout from '@/components/Layout';
+import PageTransition from '@/components/PageTransition';
 import { NotificationProvider } from '@/contexts/NotificationContext';
 
 export default function App({ Component, pageProps }) {
@@ -13,7 +14,7 @@ export default function App({ Component, pageProps }) {
     // Check if user is authenticated
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('token');
-      const publicPages = ['/login', '/register'];
+      const publicPages = ['/', '/login', '/register'];
       const isPublicPage = publicPages.includes(router.pathname);
 
       if (!token && !isPublicPage) {
@@ -37,15 +38,21 @@ export default function App({ Component, pageProps }) {
     );
   }
 
-  // Don't show layout on login/register pages
-  if (router.pathname === '/login' || router.pathname === '/register') {
-    return <Component {...pageProps} />;
+  // Don't show layout on login/register/landing pages
+  if (router.pathname === '/' || router.pathname === '/login' || router.pathname === '/register') {
+    return (
+      <PageTransition>
+        <Component {...pageProps} />
+      </PageTransition>
+    );
   }
 
   return (
     <NotificationProvider>
       <Layout>
-        <Component {...pageProps} />
+        <PageTransition>
+          <Component {...pageProps} />
+        </PageTransition>
       </Layout>
     </NotificationProvider>
   );

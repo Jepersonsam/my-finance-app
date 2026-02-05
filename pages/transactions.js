@@ -145,12 +145,34 @@ export default function Transactions() {
   };
 
   const handleEdit = (transaction) => {
+    // Parse date properly - handle UTC to prevent timezone shift
+    let dateValue = transaction.date;
+    if (typeof dateValue === 'string') {
+      // If date is in ISO format (e.g., "2026-01-30T00:00:00.000Z")
+      // Extract just the date part without timezone conversion
+      if (dateValue.includes('T')) {
+        dateValue = dateValue.substring(0, 10); // Get YYYY-MM-DD
+      }
+    } else if (dateValue instanceof Date) {
+      // Convert Date object to YYYY-MM-DD in UTC
+      const year = dateValue.getUTCFullYear();
+      const month = String(dateValue.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(dateValue.getUTCDate()).padStart(2, '0');
+      dateValue = `${year}-${month}-${day}`;
+    }
+
+    // Convert amount to integer (remove decimal places if any)
+    const amountValue = typeof transaction.amount === 'string'
+      ? parseFloat(transaction.amount)
+      : transaction.amount;
+    const amountInteger = Math.round(amountValue);
+
     setFormData({
       type: transaction.type,
       category: transaction.category,
-      amount: formatNumberInput(transaction.amount.toString()),
-      date: transaction.date.split('T')[0],
-      description: transaction.description,
+      amount: formatNumberInput(amountInteger.toString()),
+      date: dateValue,
+      description: transaction.description || '',
     });
     setEditingId(transaction.id);
     setShowForm(true);
@@ -194,30 +216,36 @@ export default function Transactions() {
         </Button>
       </div>
 
-      <div className="flex justify-between items-center bg-white p-4 rounded-lg shadow">
-        <div className="flex items-center space-x-4">
-          <label className="text-gray-700 font-medium">Periode:</label>
+      {/* Filter and Export Section */}
+      <div className="bg-white p-4 rounded-lg shadow space-y-4 md:space-y-0 md:flex md:justify-between md:items-center">
+        {/* Period Filter */}
+        <div className="flex items-center space-x-3">
+          <label className="text-gray-700 font-medium text-sm md:text-base">Periode:</label>
           <input
             type="month"
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
-            className="border-gray-300 focus:border-primary-500 focus:ring-primary-500 rounded-md shadow-sm"
+            className="flex-1 md:flex-none border-gray-300 focus:border-primary-500 focus:ring-primary-500 rounded-md shadow-sm text-sm"
           />
         </div>
-        <div className="flex space-x-2">
+
+        {/* Export Buttons */}
+        <div className="grid grid-cols-2 gap-2 md:flex md:space-x-2">
           <Button
             variant="secondary"
             onClick={() => exportToExcel(transactions, `Transaksi_${selectedMonth}`)}
             disabled={transactions.length === 0}
+            className="text-sm"
           >
-            Export Excel
+            📊 Excel
           </Button>
           <Button
             variant="secondary"
             onClick={() => exportToPDF(transactions, `Transaksi_${selectedMonth}`, `Laporan Transaksi - ${selectedMonth}`)}
             disabled={transactions.length === 0}
+            className="text-sm"
           >
-            Export PDF
+            📄 PDF
           </Button>
         </div>
       </div>
@@ -326,82 +354,153 @@ export default function Transactions() {
         {loading ? (
           <div className="text-center py-8">Memuat data...</div>
         ) : transactions.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Tanggal
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Tipe
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Kategori
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Keterangan
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                    Jumlah
-                  </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                    Aksi
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {transactions.map((transaction) => (
-                  <tr key={transaction.id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatDateShort(transaction.date)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 py-1 text-xs font-semibold rounded-full ${transaction.type === 'income'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-red-100 text-red-800'
+          <>
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Tanggal
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Tipe
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Kategori
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Keterangan
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                      Jumlah
+                    </th>
+                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                      Aksi
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {transactions.map((transaction) => (
+                    <tr key={transaction.id}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {formatDateShort(transaction.date)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span
+                          className={`px-2 py-1 text-xs font-semibold rounded-full ${transaction.type === 'income'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
+                            }`}
+                        >
+                          {transaction.type === 'income'
+                            ? 'Pemasukan'
+                            : 'Pengeluaran'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {transaction.category}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-500">
+                        {transaction.description}
+                      </td>
+                      <td
+                        className={`px-6 py-4 whitespace-nowrap text-sm font-medium text-right ${transaction.type === 'income'
+                          ? 'text-green-600'
+                          : 'text-red-600'
                           }`}
                       >
-                        {transaction.type === 'income'
-                          ? 'Pemasukan'
-                          : 'Pengeluaran'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {transaction.category}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
-                      {transaction.description}
-                    </td>
-                    <td
-                      className={`px-6 py-4 whitespace-nowrap text-sm font-medium text-right ${transaction.type === 'income'
+                        {transaction.type === 'income' ? '+' : '-'}
+                        {formatCurrency(transaction.amount)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                        <button
+                          onClick={() => handleEdit(transaction)}
+                          className="text-primary-600 hover:text-primary-900 mr-4"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(transaction.id)}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          Hapus
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="md:hidden space-y-3">
+              {transactions.map((transaction) => (
+                <div
+                  key={transaction.id}
+                  className="border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition-colors"
+                >
+                  {/* Header: Type badge and Amount */}
+                  <div className="flex justify-between items-center mb-3">
+                    <span
+                      className={`px-2.5 py-1 text-xs font-semibold rounded-full ${transaction.type === 'income'
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-red-100 text-red-800'
+                        }`}
+                    >
+                      {transaction.type === 'income' ? 'Pemasukan' : 'Pengeluaran'}
+                    </span>
+                    <div
+                      className={`text-xl font-bold ${transaction.type === 'income'
                         ? 'text-green-600'
                         : 'text-red-600'
                         }`}
                     >
                       {transaction.type === 'income' ? '+' : '-'}
                       {formatCurrency(transaction.amount)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                      <button
-                        onClick={() => handleEdit(transaction)}
-                        className="text-primary-600 hover:text-primary-900 mr-4"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(transaction.id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        Hapus
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    </div>
+                  </div>
+
+                  {/* Date */}
+                  <div className="text-xs text-gray-500 mb-3">
+                    📅 {formatDateShort(transaction.date)}
+                  </div>
+
+                  {/* Details */}
+                  <div className="space-y-2 mb-4">
+                    <div>
+                      <p className="text-xs text-gray-500 mb-0.5">Kategori</p>
+                      <p className="text-sm font-medium text-gray-900">
+                        {transaction.category}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 mb-0.5">Keterangan</p>
+                      <p className="text-sm text-gray-700">
+                        {transaction.description}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-2 pt-3 border-t border-gray-100">
+                    <button
+                      onClick={() => handleEdit(transaction)}
+                      className="flex-1 px-4 py-2.5 text-sm font-medium text-primary-600 bg-primary-50 hover:bg-primary-100 rounded-lg transition-colors"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(transaction.id)}
+                      className="flex-1 px-4 py-2.5 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+                    >
+                      Hapus
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         ) : (
           <div className="text-center py-8 text-gray-500">
             Belum ada transaksi. Tambahkan transaksi pertama Anda.

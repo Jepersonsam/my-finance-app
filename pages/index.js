@@ -1,235 +1,168 @@
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
 import Link from 'next/link';
-import {
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from 'recharts';
-import { transactionAPI } from '@/lib/api';
-import Card from '@/components/Card';
-import Button from '@/components/Button';
-import { formatCurrency, formatDateShort } from '@/utils/format';
+import { useRouter } from 'next/router';
 
-export default function Dashboard() {
-  const router = useRouter();
-  const [transactions, setTransactions] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [balance, setBalance] = useState(0);
-  const [income, setIncome] = useState(0);
-  const [expense, setExpense] = useState(0);
+export default function LandingPage() {
+    const router = useRouter();
 
-  useEffect(() => {
-    loadTransactions();
-  }, []);
-
-  const loadTransactions = async () => {
-    try {
-      const data = await transactionAPI.getAll();
-      const transactionsData = Array.isArray(data) ? data : [];
-
-      setTransactions(transactionsData);
-
-      // Calculate totals
-      const totalIncome = transactionsData
-        .filter((t) => t.type === 'income')
-        .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
-      const totalExpense = transactionsData
-        .filter((t) => t.type === 'expense')
-        .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
-
-      setIncome(totalIncome);
-      setExpense(totalExpense);
-      setBalance(totalIncome - totalExpense);
-    } catch (error) {
-      console.error('Error loading transactions:', error);
-      setTransactions([]);
-      setIncome(0);
-      setExpense(0);
-      setBalance(0);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Prepare chart data
-  const chartData = [
-    { name: 'Sen', income: 0, expense: 0 },
-    { name: 'Sel', income: 0, expense: 0 },
-    { name: 'Rab', income: 0, expense: 0 },
-    { name: 'Kam', income: 0, expense: 0 },
-    { name: 'Jum', income: income, expense: expense },
-    { name: 'Sab', income: 0, expense: 0 },
-    { name: 'Min', income: 0, expense: 0 },
-  ];
-
-  const categoryData = transactions.reduce((acc, transaction) => {
-    if (transaction.type === 'expense') {
-      const amount = parseFloat(transaction.amount) || 0;
-      const existing = acc.find((item) => item.name === transaction.category);
-      if (existing) {
-        existing.value += amount;
-      } else {
-        acc.push({ name: transaction.category, value: amount });
-      }
-    }
-    return acc;
-  }, []);
-
-  if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Memuat data...</p>
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50">
+            {/* Header */}
+            <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex justify-between items-center h-16">
+                        <div className="flex items-center space-x-2">
+                            <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
+                                MyFinance
+                            </span>
+                        </div>
+                        <div className="flex items-center space-x-4">
+                            <Link href="/login">
+                                <button className="px-4 py-2 text-gray-700 hover:text-blue-600 font-medium transition-colors">
+                                    Masuk
+                                </button>
+                            </Link>
+                            <Link href="/register">
+                                <button className="px-6 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-full hover:shadow-lg transition-all duration-300 font-medium">
+                                    Mulai Gratis
+                                </button>
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            {/* Hero Section */}
+            <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+                <div className="text-center">
+                    <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
+                        Kelola Keuangan Anda
+                        <span className="block bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
+                            dengan Mudah
+                        </span>
+                    </h1>
+                    <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+                        Aplikasi pencatatan keuangan yang membantu Anda melacak pemasukan, pengeluaran,
+                        dan mencapai tujuan finansial dengan visualisasi data yang intuitif.
+                    </p>
+                    <div className="flex justify-center space-x-4">
+                        <Link href="/register">
+                            <button className="px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-full hover:shadow-xl transition-all duration-300 font-semibold text-lg">
+                                Mulai Gratis Sekarang
+                            </button>
+                        </Link>
+                        <Link href="/login">
+                            <button className="px-8 py-4 bg-white text-gray-700 rounded-full hover:shadow-lg transition-all duration-300 font-semibold text-lg border-2 border-gray-200">
+                                Sudah Punya Akun
+                            </button>
+                        </Link>
+                    </div>
+                </div>
+            </section>
+
+            {/* Features Section */}
+            <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+                <div className="text-center mb-16">
+                    <h2 className="text-4xl font-bold text-gray-900 mb-4">Fitur Unggulan</h2>
+                    <p className="text-xl text-gray-600">Semua yang Anda butuhkan untuk mengelola keuangan</p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    {/* Feature 1 */}
+                    <div className="bg-white/60 backdrop-blur-sm p-8 rounded-2xl border border-gray-200 hover:shadow-xl transition-all duration-300">
+                        <div className="text-5xl mb-4">📊</div>
+                        <h3 className="text-2xl font-bold text-gray-900 mb-3">Tracking Real-time</h3>
+                        <p className="text-gray-600">
+                            Catat setiap transaksi dengan mudah dan lihat saldo Anda secara real-time.
+                            Kategorisasi otomatis membantu Anda memahami pola pengeluaran.
+                        </p>
+                    </div>
+
+                    {/* Feature 2 */}
+                    <div className="bg-white/60 backdrop-blur-sm p-8 rounded-2xl border border-gray-200 hover:shadow-xl transition-all duration-300">
+                        <div className="text-5xl mb-4">💰</div>
+                        <h3 className="text-2xl font-bold text-gray-900 mb-3">Budgeting & Savings</h3>
+                        <p className="text-gray-600">
+                            Buat anggaran bulanan dan target tabungan. Pantau progress Anda dan
+                            dapatkan notifikasi saat mendekati batas anggaran.
+                        </p>
+                    </div>
+
+                    {/* Feature 3 */}
+                    <div className="bg-white/60 backdrop-blur-sm p-8 rounded-2xl border border-gray-200 hover:shadow-xl transition-all duration-300">
+                        <div className="text-5xl mb-4">📈</div>
+                        <h3 className="text-2xl font-bold text-gray-900 mb-3">Visualisasi Data</h3>
+                        <p className="text-gray-600">
+                            Grafik dan chart interaktif membantu Anda memahami kondisi keuangan.
+                            Export laporan dalam format Excel atau PDF.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            {/* How It Works */}
+            <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+                <div className="text-center mb-16">
+                    <h2 className="text-4xl font-bold text-gray-900 mb-4">Cara Kerja</h2>
+                    <p className="text-xl text-gray-600">Mulai dalam 3 langkah mudah</p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+                    {/* Step 1 */}
+                    <div className="text-center">
+                        <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
+                            1
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">Daftar Gratis</h3>
+                        <p className="text-gray-600">
+                            Buat akun dalam hitungan detik. Tidak perlu kartu kredit.
+                        </p>
+                    </div>
+
+                    {/* Step 2 */}
+                    <div className="text-center">
+                        <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
+                            2
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">Input Transaksi</h3>
+                        <p className="text-gray-600">
+                            Catat pemasukan dan pengeluaran Anda dengan interface yang intuitif.
+                        </p>
+                    </div>
+
+                    {/* Step 3 */}
+                    <div className="text-center">
+                        <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
+                            3
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">Analisis Keuangan</h3>
+                        <p className="text-gray-600">
+                            Lihat laporan lengkap dan insight untuk keputusan finansial yang lebih baik.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            {/* CTA Section */}
+            <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+                <div className="bg-gradient-to-r from-blue-600 to-cyan-500 rounded-3xl p-12 text-center text-white">
+                    <h2 className="text-4xl font-bold mb-4">Siap Mengelola Keuangan Anda?</h2>
+                    <p className="text-xl mb-8 opacity-90">
+                        Bergabunglah dengan ribuan pengguna yang sudah merasakan manfaatnya
+                    </p>
+                    <Link href="/register">
+                        <button className="px-8 py-4 bg-white text-blue-600 rounded-full hover:shadow-2xl transition-all duration-300 font-semibold text-lg">
+                            Mulai Gratis Sekarang →
+                        </button>
+                    </Link>
+                </div>
+            </section>
+
+            {/* Footer */}
+            <footer className="bg-gray-900 text-white py-8">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                    <p className="text-gray-400">
+                        © 2024 MyFinance. Kelola keuangan Anda dengan bijak.
+                    </p>
+                </div>
+            </footer>
         </div>
-      </div>
     );
-  }
-
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <Link href="/transactions">
-          <Button variant="primary">+ Tambah Transaksi</Button>
-        </Link>
-      </div>
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <div className="text-center">
-            <p className="text-sm text-gray-600 mb-2">Saldo Total</p>
-            <p className="text-3xl font-bold text-primary-600">
-              {formatCurrency(balance)}
-            </p>
-          </div>
-        </Card>
-        <Card>
-          <div className="text-center">
-            <p className="text-sm text-gray-600 mb-2">Total Pemasukan</p>
-            <p className="text-3xl font-bold text-green-600">
-              {formatCurrency(income)}
-            </p>
-          </div>
-        </Card>
-        <Card>
-          <div className="text-center">
-            <p className="text-sm text-gray-600 mb-2">Total Pengeluaran</p>
-            <p className="text-3xl font-bold text-red-600">
-              {formatCurrency(expense)}
-            </p>
-          </div>
-        </Card>
-      </div>
-
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card title="Grafik Pemasukan & Pengeluaran">
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip formatter={(value) => formatCurrency(value)} />
-              <Legend />
-              <Bar dataKey="income" fill="#10b981" name="Pemasukan" />
-              <Bar dataKey="expense" fill="#ef4444" name="Pengeluaran" />
-            </BarChart>
-          </ResponsiveContainer>
-        </Card>
-
-        <Card title="Pengeluaran per Kategori">
-          {categoryData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={categoryData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip formatter={(value) => formatCurrency(value)} />
-                <Bar dataKey="value" fill="#0ea5e9" />
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="flex items-center justify-center h-64 text-gray-500">
-              Belum ada data pengeluaran
-            </div>
-          )}
-        </Card>
-      </div>
-
-      {/* Recent Transactions */}
-      <Card
-        title="Transaksi Terbaru"
-        action={
-          <Link href="/transactions">
-            <Button variant="outline" size="sm">
-              Lihat Semua
-            </Button>
-          </Link>
-        }
-      >
-        {transactions.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Tanggal
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Kategori
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Keterangan
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Jumlah
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {transactions.slice(0, 5).map((transaction) => (
-                  <tr key={transaction.id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatDateShort(transaction.date)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {transaction.category}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
-                      {transaction.description}
-                    </td>
-                    <td
-                      className={`px-6 py-4 whitespace-nowrap text-sm font-medium text-right ${transaction.type === 'income'
-                        ? 'text-green-600'
-                        : 'text-red-600'
-                        }`}
-                    >
-                      {transaction.type === 'income' ? '+' : '-'}
-                      {formatCurrency(transaction.amount)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="text-center py-8 text-gray-500">
-            Belum ada transaksi. Mulai dengan menambahkan transaksi pertama
-            Anda.
-          </div>
-        )}
-      </Card>
-    </div>
-  );
 }
