@@ -18,6 +18,7 @@ export default function Installments() {
     totalAmount: '',
     paidAmount: '0',
     installments: '',
+    currentInstallment: 0,
     dueDate: '',
     reminder: true,
   });
@@ -97,6 +98,7 @@ export default function Installments() {
         totalAmount: parseNumberInput(formData.totalAmount),
         paidAmount: parseNumberInput(formData.paidAmount || '0'),
         installments: parseInt(formData.installments),
+        currentInstallment: editingId ? formData.currentInstallment : 0,
       };
 
       if (editingId) {
@@ -112,6 +114,7 @@ export default function Installments() {
         totalAmount: '',
         paidAmount: '0',
         installments: '',
+        currentInstallment: 0,
         dueDate: '',
         reminder: true,
       });
@@ -132,6 +135,7 @@ export default function Installments() {
       totalAmount: formatNumberInput(installment.totalAmount.toString()),
       paidAmount: formatNumberInput(installment.paidAmount.toString()),
       installments: installment.installments.toString(),
+      currentInstallment: installment.currentInstallment || 0,
       dueDate: installment.dueDate.split('T')[0],
       reminder: installment.reminder || false,
     });
@@ -162,9 +166,13 @@ export default function Installments() {
           installment.installments
         );
         await installmentAPI.update(id, {
-          ...installment,
+          name: installment.name,
+          totalAmount: installment.totalAmount,
           paidAmount: newPaidAmount,
+          installments: installment.installments,
           currentInstallment: newCurrentInstallment,
+          dueDate: installment.dueDate,
+          reminder: installment.reminder,
         });
         notify.success('Pembayaran berhasil dicatat');
         loadInstallments();
@@ -201,6 +209,7 @@ export default function Installments() {
               totalAmount: '',
               paidAmount: '0',
               installments: '',
+              currentInstallment: 0,
               dueDate: '',
               reminder: true,
             });
