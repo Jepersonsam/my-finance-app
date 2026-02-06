@@ -130,10 +130,14 @@ export default function Installments() {
   };
 
   const handleEdit = (installment) => {
+    // Ensure values are integers to prevent decimal issues
+    const totalAmountInt = Math.round(parseFloat(installment.totalAmount) || 0);
+    const paidAmountInt = Math.round(parseFloat(installment.paidAmount) || 0);
+
     setFormData({
       name: installment.name,
-      totalAmount: formatNumberInput(installment.totalAmount.toString()),
-      paidAmount: formatNumberInput(installment.paidAmount.toString()),
+      totalAmount: formatNumberInput(totalAmountInt.toString()),
+      paidAmount: formatNumberInput(paidAmountInt.toString()),
       installments: installment.installments.toString(),
       currentInstallment: installment.currentInstallment || 0,
       dueDate: installment.dueDate.split('T')[0],
