@@ -138,11 +138,15 @@ export default function Debts() {
   };
 
   const handleEdit = (debt) => {
+    // Ensure values are integers to prevent decimal issues
+    const totalAmountInt = Math.round(parseFloat(debt.totalAmount) || 0);
+    const paidAmountInt = Math.round(parseFloat(debt.paidAmount) || 0);
+
     setFormData({
       name: debt.name,
       type: debt.type,
-      totalAmount: formatNumberInput(debt.totalAmount.toString()),
-      paidAmount: formatNumberInput(debt.paidAmount.toString()),
+      totalAmount: formatNumberInput(totalAmountInt.toString()),
+      paidAmount: formatNumberInput(paidAmountInt.toString()),
       dueDate: debt.dueDate.split('T')[0],
       interestRate: debt.interestRate?.toString() || '0',
       reminder: debt.reminder || false,
@@ -171,8 +175,14 @@ export default function Debts() {
       if (debt) {
         const newPaidAmount = debt.paidAmount + parseFloat(amount);
         await debtAPI.update(id, {
-          ...debt,
+          name: debt.name,
+          type: debt.type,
+          totalAmount: debt.totalAmount,
           paidAmount: newPaidAmount,
+          dueDate: debt.dueDate,
+          interestRate: debt.interestRate,
+          reminder: debt.reminder,
+          description: debt.description,
         });
         notify.success('Pembayaran berhasil dicatat');
         loadDebts();

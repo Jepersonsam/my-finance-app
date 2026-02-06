@@ -131,13 +131,18 @@ export default function Savings() {
   };
 
   const handleEdit = (saving) => {
+    // Ensure values are integers to prevent decimal issues
+    const targetAmountInt = Math.round(parseFloat(saving.targetAmount) || 0);
+    const currentAmountInt = Math.round(parseFloat(saving.currentAmount) || 0);
+    const autoSaveAmountInt = saving.autoSaveAmount ? Math.round(parseFloat(saving.autoSaveAmount) || 0) : 0;
+
     setFormData({
       name: saving.name,
-      targetAmount: formatNumberInput(saving.targetAmount.toString()),
-      currentAmount: formatNumberInput(saving.currentAmount.toString()),
+      targetAmount: formatNumberInput(targetAmountInt.toString()),
+      currentAmount: formatNumberInput(currentAmountInt.toString()),
       targetDate: saving.targetDate.split('T')[0],
       autoSave: saving.autoSave || false,
-      autoSaveAmount: saving.autoSaveAmount ? formatNumberInput(saving.autoSaveAmount.toString()) : '',
+      autoSaveAmount: autoSaveAmountInt > 0 ? formatNumberInput(autoSaveAmountInt.toString()) : '',
     });
     setEditingId(saving.id);
     setShowForm(true);
@@ -162,8 +167,12 @@ export default function Savings() {
       if (saving) {
         const newAmount = saving.currentAmount + parseFloat(amount);
         await savingsAPI.update(id, {
-          ...saving,
+          name: saving.name,
+          targetAmount: saving.targetAmount,
           currentAmount: newAmount,
+          targetDate: saving.targetDate,
+          autoSave: saving.autoSave,
+          autoSaveAmount: saving.autoSaveAmount,
         });
         notify.success('Jumlah berhasil ditambahkan');
         loadSavings();
